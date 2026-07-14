@@ -1,18 +1,21 @@
 FROM php:8.2-apache
 
-# 1. إزالة أي MPM مثبت حالياً
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load
+# تعطيل أي وحدات MPM قد تكون مفعلة افتراضياً
+RUN a2dismod mpm_event mpm_worker mpm_prefork || true
 
-# 2. تفعيل وحدة prefork فقط (وهي الأكثر توافقاً مع PHP)
+# تفعيل وحدة prefork بشكل صريح
 RUN a2enmod mpm_prefork
 
-# 3. تثبيت الامتدادات الضرورية لـ PHP
+# تثبيت الإضافات الضرورية
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# 4. نسخ ملفات المشروع
+# نسخ الملفات
 COPY . /var/www/html/
 
-# 5. ضبط الصلاحيات
+# ضبط الصلاحيات
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
+
+# تشغيل Apache في المقدمة
+CMD ["apache2-foreground"]
